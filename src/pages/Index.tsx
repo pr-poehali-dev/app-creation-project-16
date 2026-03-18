@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 interface Tag {
@@ -24,6 +24,8 @@ interface Category {
   icon: string;
 }
 
+const SYSTEM_CATEGORY_IDS = ["all"];
+
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "all", name: "Все заметки", icon: "LayoutGrid" },
   { id: "personal", name: "Личное", icon: "User" },
@@ -37,6 +39,11 @@ const DEFAULT_TAGS: Tag[] = [
   { id: "t2", name: "задача", color: "#3b82f6" },
   { id: "t3", name: "позже", color: "#8b5cf6" },
   { id: "t4", name: "идея", color: "#10b981" },
+];
+
+const TAG_COLORS = [
+  "#f59e0b", "#3b82f6", "#8b5cf6", "#10b981",
+  "#ef4444", "#ec4899", "#f97316", "#14b8a6",
 ];
 
 const SAMPLE_NOTES: Note[] = [
@@ -87,10 +94,154 @@ const formatDate = (date: Date) => {
 
 const generateId = () => Math.random().toString(36).slice(2, 10);
 
+// --- Inline dropdown menu ---
+function DropdownMenu({
+  items,
+  onClose,
+}: {
+  items: { label: string; icon: string; danger?: boolean; onClick: () => void }[];
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute left-0 top-full mt-1 z-50 w-40 bg-popover border border-border rounded-lg shadow-xl py-1 animate-fade-in"
+    >
+      {items.map((item) => (
+        <button
+          key={item.label}
+          onClick={() => { item.onClick(); onClose(); }}
+          className={`flex items-center gap-2 w-full px-3 py-2 text-xs transition-colors hover:bg-muted ${
+            item.danger ? "text-destructive" : "text-foreground"
+          }`}
+        >
+          <Icon name={item.icon} fallback="Circle" size={13} />
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// --- Modal for create/edit ---
+function EditModal({
+  title,
+  value,
+  color,
+  showColor,
+  onSave,
+  onClose,
+}: {
+  title: string;
+  value: string;
+  color?: string;
+  showColor?: boolean;
+  onSave: (name: string, color?: string) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(value);
+  const [selectedColor, setSelectedColor] = useState(color || TAG_COLORS[0]);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-card border border-border rounded-xl p-5 w-72 shadow-2xl">
+        <h3 className="font-semibold text-foreground mb-4 text-sm">{title}</h3>
+        <input
+          autoFocus
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") onSave(name, selectedColor); if (e.key === "Escape") onClose(); }}
+          className="w-full bg-muted border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber mb-3"
+          placeholder="Название..."
+        />
+        {showColor && (
+          <div className="flex gap-2 flex-wrap mb-4">
+            {TAG_COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setSelectedColor(c)}
+                className="w-5 h-5 rounded-full transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: c,
+                  outline: selectedColor === c ? `2px solid ${c}` : "none",
+                  outlineOffset: "2px",
+                }}
+              />
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 text-sm rounded-lg bg-muted text-foreground hover:bg-secondary transition-colors"
+          >
+            Отмена
+          </button>
+          <button
+            onClick={() => name.trim() && onSave(name.trim(), selectedColor)}
+            className="flex-1 py-2 text-sm rounded-lg bg-amber text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity font-medium"
+          >
+            Сохранить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Delete confirm modal ---
+function DeleteModal({
+  label,
+  onConfirm,
+  onClose,
+}: {
+  label: string;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-card border border-border rounded-xl p-6 w-72 shadow-2xl">
+        <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center mb-3">
+          <Icon name="Trash2" size={18} className="text-destructive" />
+        </div>
+        <h3 className="font-semibold text-foreground mb-1 text-sm">Удалить?</h3>
+        <p className="text-xs text-muted-foreground mb-5">
+          «{label}» будет удалён навсегда.
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 text-sm rounded-lg bg-muted text-foreground hover:bg-secondary transition-colors"
+          >
+            Отмена
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2 text-sm rounded-lg bg-destructive text-white hover:opacity-90 transition-opacity font-medium"
+          >
+            Удалить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>(SAMPLE_NOTES);
-  const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [tags] = useState<Tag[]>(DEFAULT_TAGS);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedNote, setSelectedNote] = useState<Note | null>(SAMPLE_NOTES[0]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +252,20 @@ export default function Index() {
   const [editTags, setEditTags] = useState<string[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Dropdown open state: "cat-{id}" | "tag-{id}" | null
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  // Modals
+  const [modal, setModal] = useState<
+    | { type: "add-cat" }
+    | { type: "edit-cat"; cat: Category }
+    | { type: "delete-cat"; cat: Category }
+    | { type: "add-tag" }
+    | { type: "edit-tag"; tag: Tag }
+    | { type: "delete-tag"; tag: Tag }
+    | null
+  >(null);
 
   const filteredNotes = useMemo(() => {
     let result = notes;
@@ -181,6 +346,43 @@ export default function Index() {
     setSelectedNote(updated);
   }, [selectedNote]);
 
+  // --- Category CRUD ---
+  const addCategory = (name: string) => {
+    const newCat: Category = { id: generateId(), name, icon: "Folder" };
+    setCategories((prev) => [...prev, newCat]);
+    setModal(null);
+  };
+
+  const editCategory_ = (id: string, name: string) => {
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)));
+    setModal(null);
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setNotes((prev) => prev.map((n) => n.categoryId === id ? { ...n, categoryId: "personal" } : n));
+    if (selectedCategory === id) setSelectedCategory("all");
+    setModal(null);
+  };
+
+  // --- Tag CRUD ---
+  const addTag = (name: string, color?: string) => {
+    const newTag: Tag = { id: generateId(), name, color: color || TAG_COLORS[0] };
+    setTags((prev) => [...prev, newTag]);
+    setModal(null);
+  };
+
+  const editTag_ = (id: string, name: string, color?: string) => {
+    setTags((prev) => prev.map((t) => (t.id === id ? { ...t, name, color: color || t.color } : t)));
+    setModal(null);
+  };
+
+  const deleteTag = (id: string) => {
+    setTags((prev) => prev.filter((t) => t.id !== id));
+    setNotes((prev) => prev.map((n) => ({ ...n, tags: n.tags.filter((tid) => tid !== id) })));
+    setModal(null);
+  };
+
   const getTag = (id: string) => tags.find((t) => t.id === id);
   const getCategoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name || id;
@@ -223,9 +425,18 @@ export default function Index() {
         {/* Categories */}
         <nav className="flex-1 px-2 py-1 overflow-y-auto">
           {!sidebarCollapsed && (
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 mb-1.5 font-medium">
-              Разделы
-            </p>
+            <div className="flex items-center justify-between px-2 mb-1.5">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                Разделы
+              </p>
+              <button
+                onClick={() => setModal({ type: "add-cat" })}
+                className="text-muted-foreground hover:text-amber transition-colors"
+                title="Добавить раздел"
+              >
+                <Icon name="Plus" size={12} />
+              </button>
+            </div>
           )}
           {categories.map((cat) => {
             const count =
@@ -233,48 +444,97 @@ export default function Index() {
                 ? notes.length
                 : notes.filter((n) => n.categoryId === cat.id).length;
             const active = selectedCategory === cat.id;
+            const isSystem = SYSTEM_CATEGORY_IDS.includes(cat.id);
+            const menuKey = `cat-${cat.id}`;
             return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2.5 w-full rounded-md px-2.5 py-2 text-sm transition-all mb-0.5 ${
-                  active
-                    ? "bg-[hsl(var(--sidebar-accent))] text-amber font-medium"
-                    : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-foreground"
-                } ${sidebarCollapsed ? "justify-center" : ""}`}
-                title={sidebarCollapsed ? cat.name : undefined}
-              >
-                <Icon name={cat.icon} fallback="Folder" size={15} />
-                {!sidebarCollapsed && (
-                  <>
-                    <span className="flex-1 text-left">{cat.name}</span>
-                    <span className="text-xs text-muted-foreground">{count}</span>
-                  </>
+              <div key={cat.id} className="relative group mb-0.5">
+                <button
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center gap-2.5 w-full rounded-md px-2.5 py-2 text-sm transition-all ${
+                    active
+                      ? "bg-[hsl(var(--sidebar-accent))] text-amber font-medium"
+                      : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-foreground"
+                  } ${sidebarCollapsed ? "justify-center" : ""}`}
+                  title={sidebarCollapsed ? cat.name : undefined}
+                >
+                  <Icon name={cat.icon} fallback="Folder" size={15} />
+                  {!sidebarCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">{cat.name}</span>
+                      <span className="text-xs text-muted-foreground">{count}</span>
+                    </>
+                  )}
+                </button>
+                {!sidebarCollapsed && !isSystem && (
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                    >
+                      <Icon name="MoreHorizontal" size={13} />
+                    </button>
+                    {openMenu === menuKey && (
+                      <DropdownMenu
+                        onClose={() => setOpenMenu(null)}
+                        items={[
+                          { label: "Переименовать", icon: "Pencil", onClick: () => setModal({ type: "edit-cat", cat }) },
+                          { label: "Удалить", icon: "Trash2", danger: true, onClick: () => setModal({ type: "delete-cat", cat }) },
+                        ]}
+                      />
+                    )}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
 
           {/* Tags */}
           {!sidebarCollapsed && (
             <>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground px-2 mt-4 mb-1.5 font-medium">
-                Теги
-              </p>
+              <div className="flex items-center justify-between px-2 mt-4 mb-1.5">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                  Теги
+                </p>
+                <button
+                  onClick={() => setModal({ type: "add-tag" })}
+                  className="text-muted-foreground hover:text-amber transition-colors"
+                  title="Добавить тег"
+                >
+                  <Icon name="Plus" size={12} />
+                </button>
+              </div>
               <div className="flex flex-wrap gap-1.5 px-2">
-                {tags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    onClick={() => {
-                      setSearchQuery(tag.name);
-                      setSelectedCategory("all");
-                    }}
-                    className="text-xs px-2 py-0.5 rounded-full border transition-all hover:opacity-80"
-                    style={{ borderColor: tag.color + "60", color: tag.color, backgroundColor: tag.color + "15" }}
-                  >
-                    #{tag.name}
-                  </button>
-                ))}
+                {tags.map((tag) => {
+                  const menuKey = `tag-${tag.id}`;
+                  return (
+                    <div key={tag.id} className="relative group/tag">
+                      <button
+                        onClick={() => { setSearchQuery(tag.name); setSelectedCategory("all"); }}
+                        className="text-xs px-2 py-0.5 rounded-full border transition-all hover:opacity-80"
+                        style={{ borderColor: tag.color + "60", color: tag.color, backgroundColor: tag.color + "15" }}
+                      >
+                        #{tag.name}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === menuKey ? null : menuKey); }}
+                        className="absolute -top-1.5 -right-1.5 opacity-0 group-hover/tag:opacity-100 w-4 h-4 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+                      >
+                        <Icon name="MoreHorizontal" size={9} />
+                      </button>
+                      {openMenu === menuKey && (
+                        <div className="absolute left-0 top-full mt-1 z-50">
+                          <DropdownMenu
+                            onClose={() => setOpenMenu(null)}
+                            items={[
+                              { label: "Изменить", icon: "Pencil", onClick: () => setModal({ type: "edit-tag", tag }) },
+                              { label: "Удалить", icon: "Trash2", danger: true, onClick: () => setModal({ type: "delete-tag", tag }) },
+                            ]}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
@@ -338,10 +598,7 @@ export default function Index() {
             filteredNotes.map((note, i) => (
               <button
                 key={note.id}
-                onClick={() => {
-                  setSelectedNote(note);
-                  setIsEditing(false);
-                }}
+                onClick={() => { setSelectedNote(note); setIsEditing(false); }}
                 className={`w-full text-left px-4 py-3 border-b border-border note-card-hover transition-all animate-slide-in ${
                   selectedNote?.id === note.id
                     ? "bg-muted border-l-2 border-l-amber"
@@ -372,10 +629,7 @@ export default function Index() {
                         <span
                           key={tid}
                           className="text-[10px] px-1.5 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: tag.color + "20",
-                            color: tag.color,
-                          }}
+                          style={{ backgroundColor: tag.color + "20", color: tag.color }}
                         >
                           #{tag.name}
                         </span>
@@ -406,10 +660,7 @@ export default function Index() {
                     <span
                       key={tid}
                       className="text-xs px-2 py-1 rounded"
-                      style={{
-                        backgroundColor: tag.color + "20",
-                        color: tag.color,
-                      }}
+                      style={{ backgroundColor: tag.color + "20", color: tag.color }}
                     >
                       #{tag.name}
                     </span>
@@ -472,7 +723,6 @@ export default function Index() {
             <div className="flex-1 overflow-y-auto">
               {isEditing ? (
                 <div className="max-w-2xl mx-auto px-8 py-8 animate-fade-in">
-                  {/* Category & Tags row */}
                   <div className="flex items-center gap-3 mb-6 flex-wrap">
                     <select
                       value={editCategory}
@@ -495,17 +745,13 @@ export default function Index() {
                             key={tag.id}
                             onClick={() =>
                               setEditTags((prev) =>
-                                active
-                                  ? prev.filter((t) => t !== tag.id)
-                                  : [...prev, tag.id]
+                                active ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
                               )
                             }
                             className="text-xs px-2 py-1 rounded-full border transition-all"
                             style={{
                               borderColor: active ? tag.color : tag.color + "40",
-                              backgroundColor: active
-                                ? tag.color + "25"
-                                : "transparent",
+                              backgroundColor: active ? tag.color + "25" : "transparent",
                               color: active ? tag.color : tag.color + "90",
                             }}
                           >
@@ -515,7 +761,6 @@ export default function Index() {
                       })}
                     </div>
                   </div>
-
                   <input
                     type="text"
                     value={editTitle}
@@ -557,9 +802,7 @@ export default function Index() {
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
               <Icon name="FileText" size={28} className="text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-medium text-foreground mb-1">
-              Выберите заметку
-            </h2>
+            <h2 className="text-lg font-medium text-foreground mb-1">Выберите заметку</h2>
             <p className="text-sm text-muted-foreground mb-4">или создайте новую</p>
             <button
               onClick={createNote}
@@ -572,7 +815,7 @@ export default function Index() {
         )}
       </main>
 
-      {/* Delete confirm modal */}
+      {/* Note delete confirm */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-card border border-border rounded-xl p-6 w-80 shadow-2xl">
@@ -599,6 +842,59 @@ export default function Index() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Category modals */}
+      {modal?.type === "add-cat" && (
+        <EditModal
+          title="Новый раздел"
+          value=""
+          onSave={(name) => addCategory(name)}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "edit-cat" && (
+        <EditModal
+          title="Переименовать раздел"
+          value={modal.cat.name}
+          onSave={(name) => editCategory_(modal.cat.id, name)}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "delete-cat" && (
+        <DeleteModal
+          label={modal.cat.name}
+          onConfirm={() => deleteCategory(modal.cat.id)}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      {/* Tag modals */}
+      {modal?.type === "add-tag" && (
+        <EditModal
+          title="Новый тег"
+          value=""
+          showColor
+          onSave={(name, color) => addTag(name, color)}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "edit-tag" && (
+        <EditModal
+          title="Изменить тег"
+          value={modal.tag.name}
+          color={modal.tag.color}
+          showColor
+          onSave={(name, color) => editTag_(modal.tag.id, name, color)}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "delete-tag" && (
+        <DeleteModal
+          label={`#${modal.tag.name}`}
+          onConfirm={() => deleteTag(modal.tag.id)}
+          onClose={() => setModal(null)}
+        />
       )}
     </div>
   );
