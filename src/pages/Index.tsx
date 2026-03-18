@@ -49,9 +49,9 @@ const TAG_COLORS = [
 const SAMPLE_NOTES: Note[] = [
   {
     id: "1",
-    title: "Добро пожаловать в Notum",
+    title: "Добро пожаловать в DF заметки",
     content:
-      "Это твоё пространство для мыслей, идей и задач. Notum работает офлайн и синхронизируется когда появляется интернет.\n\nНачни с создания первой заметки — нажми кнопку «+» слева.",
+      "Это твоё пространство для мыслей, идей и задач. DF заметки работает офлайн и синхронизируется когда появляется интернет.\n\nНачни с создания первой заметки — нажми кнопку «+» слева.",
     categoryId: "personal",
     tags: ["t4"],
     createdAt: new Date("2026-03-17"),
@@ -86,13 +86,109 @@ const formatDate = (date: Date) => {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Сегодня";
-  if (days === 1) return "Вчера";
-  if (days < 7) return `${days} дн. назад`;
-  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+  const time = date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  if (days === 0) return `Сегодня ${time}`;
+  if (days === 1) return `Вчера ${time}`;
+  if (days < 7) return `${days} дн. назад ${time}`;
+  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) + ` ${time}`;
 };
 
 const generateId = () => Math.random().toString(36).slice(2, 10);
+
+// --- Theme definitions ---
+const THEME_DARK: Record<string, string> = {
+  "--background": "220 16% 8%",
+  "--foreground": "210 20% 90%",
+  "--card": "220 14% 11%",
+  "--card-foreground": "210 20% 90%",
+  "--muted": "220 12% 14%",
+  "--muted-foreground": "215 12% 50%",
+  "--border": "220 12% 18%",
+  "--input": "220 12% 16%",
+  "--popover": "220 14% 11%",
+  "--popover-foreground": "210 20% 90%",
+  "--secondary": "220 12% 15%",
+  "--secondary-foreground": "210 20% 75%",
+  "--sidebar-background": "220 16% 6%",
+  "--sidebar-foreground": "210 15% 70%",
+  "--sidebar-accent": "220 12% 13%",
+  "--sidebar-accent-foreground": "210 20% 85%",
+  "--sidebar-border": "220 12% 14%",
+  "--surface": "220 14% 11%",
+  "--surface-hover": "220 12% 14%",
+};
+
+const THEME_LIGHT: Record<string, string> = {
+  "--background": "0 0% 98%",
+  "--foreground": "220 16% 12%",
+  "--card": "0 0% 100%",
+  "--card-foreground": "220 16% 12%",
+  "--muted": "220 12% 92%",
+  "--muted-foreground": "215 12% 45%",
+  "--border": "220 12% 88%",
+  "--input": "220 12% 88%",
+  "--popover": "0 0% 100%",
+  "--popover-foreground": "220 16% 12%",
+  "--secondary": "220 12% 94%",
+  "--secondary-foreground": "220 16% 12%",
+  "--sidebar-background": "0 0% 96%",
+  "--sidebar-foreground": "220 12% 35%",
+  "--sidebar-accent": "220 12% 92%",
+  "--sidebar-accent-foreground": "220 16% 12%",
+  "--sidebar-border": "220 12% 88%",
+  "--surface": "0 0% 100%",
+  "--surface-hover": "220 12% 96%",
+};
+
+const THEME_GOLDEN: Record<string, string> = {
+  "--background": "40 30% 8%",
+  "--foreground": "40 20% 88%",
+  "--card": "40 25% 11%",
+  "--card-foreground": "40 20% 88%",
+  "--muted": "40 20% 15%",
+  "--muted-foreground": "40 12% 48%",
+  "--border": "40 20% 18%",
+  "--input": "40 20% 16%",
+  "--popover": "40 25% 11%",
+  "--popover-foreground": "40 20% 88%",
+  "--secondary": "40 18% 15%",
+  "--secondary-foreground": "40 20% 78%",
+  "--sidebar-background": "40 30% 6%",
+  "--sidebar-foreground": "40 15% 65%",
+  "--sidebar-accent": "40 18% 13%",
+  "--sidebar-accent-foreground": "40 20% 85%",
+  "--sidebar-border": "40 20% 14%",
+  "--surface": "40 25% 11%",
+  "--surface-hover": "40 20% 14%",
+};
+
+const THEMES: Record<string, Record<string, string>> = {
+  dark: THEME_DARK,
+  light: THEME_LIGHT,
+  golden: THEME_GOLDEN,
+};
+
+// --- Accent color palette ---
+const ACCENT_PALETTE = [
+  { name: "Red", hex: "#ef4444", hsl: "0 84% 60%" },
+  { name: "Orange", hex: "#f97316", hsl: "25 95% 53%" },
+  { name: "Amber", hex: "#f59e0b", hsl: "38 92% 50%" },
+  { name: "Yellow", hex: "#eab308", hsl: "48 96% 47%" },
+  { name: "Lime", hex: "#84cc16", hsl: "84 81% 44%" },
+  { name: "Green", hex: "#22c55e", hsl: "142 71% 45%" },
+  { name: "Emerald", hex: "#10b981", hsl: "160 84% 39%" },
+  { name: "Teal", hex: "#14b8a6", hsl: "173 80% 40%" },
+  { name: "Cyan", hex: "#06b6d4", hsl: "189 94% 43%" },
+  { name: "Sky", hex: "#0ea5e9", hsl: "199 89% 48%" },
+  { name: "Blue", hex: "#3b82f6", hsl: "217 91% 60%" },
+  { name: "Indigo", hex: "#6366f1", hsl: "239 84% 67%" },
+  { name: "Violet", hex: "#8b5cf6", hsl: "258 90% 66%" },
+  { name: "Purple", hex: "#a855f7", hsl: "271 91% 65%" },
+  { name: "Fuchsia", hex: "#d946ef", hsl: "292 84% 61%" },
+  { name: "Pink", hex: "#ec4899", hsl: "330 81% 60%" },
+  { name: "Rose", hex: "#f43f5e", hsl: "350 89% 60%" },
+  { name: "Slate", hex: "#64748b", hsl: "215 16% 47%" },
+];
 
 // --- Dropdown menu ---
 function DropdownMenu({
@@ -191,6 +287,259 @@ function DeleteModal({ label, onConfirm, onClose }: { label: string; onConfirm: 
   );
 }
 
+// --- Settings panel ---
+function SettingsPanel({
+  theme, setTheme,
+  accentColor, setAccentColor,
+  password, setPassword,
+  passwordEnabled, setPasswordEnabled,
+  onClose,
+}: {
+  theme: string;
+  setTheme: (t: "dark" | "light" | "golden") => void;
+  accentColor: string;
+  setAccentColor: (c: string) => void;
+  password: string;
+  setPassword: (p: string) => void;
+  passwordEnabled: boolean;
+  setPasswordEnabled: (v: boolean) => void;
+  onClose: () => void;
+}) {
+  const [passwordInput, setPasswordInput] = useState(password);
+  const ref = useRef<HTMLDivElement>(null);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-end justify-end z-50 animate-fade-in">
+      <div
+        ref={ref}
+        className="h-full w-full max-w-sm bg-card border-l border-border shadow-2xl flex flex-col overflow-hidden"
+        style={{ animation: "slide-settings 0.25s ease-out" }}
+      >
+        <style>{`
+          @keyframes slide-settings {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `}</style>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Icon name="Settings" size={16} className="text-muted-foreground" />
+            <h2 className="font-semibold text-foreground text-sm">Настройки</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Icon name="X" size={16} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+          {/* Theme selector */}
+          <div>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Тема</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { key: "dark", label: "Тёмная", bg: "#141619", fg: "#d1d5db", accent: "#1c1f24" },
+                { key: "light", label: "Светлая", bg: "#fafafa", fg: "#1e2433", accent: "#f0f0f0" },
+                { key: "golden", label: "Золотая", bg: "#1a1508", fg: "#ddd0a8", accent: "#2a2210" },
+              ] as const).map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTheme(t.key)}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                    theme === t.key
+                      ? "border-amber bg-amber/10"
+                      : "border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <div
+                    className="w-full h-10 rounded-md border border-border/30 flex items-end p-1.5 gap-1"
+                    style={{ backgroundColor: t.bg }}
+                  >
+                    <div className="w-2 h-3 rounded-sm" style={{ backgroundColor: t.accent }} />
+                    <div className="flex-1 h-4 rounded-sm" style={{ backgroundColor: t.accent }} />
+                  </div>
+                  <span className="text-xs text-foreground">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-border" />
+
+          {/* Accent color picker */}
+          <div>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Цвет акцента</h3>
+            <div className="grid grid-cols-6 gap-2">
+              {ACCENT_PALETTE.map((c) => (
+                <button
+                  key={c.hex}
+                  onClick={() => setAccentColor(c.hex)}
+                  className="w-8 h-8 rounded-full transition-transform hover:scale-110 flex items-center justify-center"
+                  style={{
+                    backgroundColor: c.hex,
+                    outline: accentColor === c.hex ? `2px solid ${c.hex}` : "none",
+                    outlineOffset: "3px",
+                  }}
+                  title={c.name}
+                >
+                  {accentColor === c.hex && (
+                    <Icon name="Check" size={14} className="text-white drop-shadow-md" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-border" />
+
+          {/* Password section */}
+          <div>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Пароль для входа</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground">Защита паролем</span>
+                <button
+                  onClick={() => {
+                    if (!passwordEnabled && !passwordInput.trim()) return;
+                    setPasswordEnabled(!passwordEnabled);
+                  }}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${
+                    passwordEnabled ? "bg-amber" : "bg-muted"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      passwordEnabled ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
+              <div>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Введите пароль..."
+                  className="w-full bg-muted border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (passwordInput.trim()) {
+                    setPassword(passwordInput.trim());
+                  }
+                }}
+                className="w-full py-2 text-sm rounded-lg bg-muted text-foreground hover:bg-secondary transition-colors font-medium"
+              >
+                Сохранить пароль
+              </button>
+              {password && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Icon name="ShieldCheck" size={12} className="text-emerald-500" />
+                  Пароль установлен
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Lock screen ---
+function LockScreen({
+  password,
+  onUnlock,
+}: {
+  password: string;
+  onUnlock: () => void;
+}) {
+  const [input, setInput] = useState("");
+  const [error, setError] = useState(false);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+
+  useEffect(() => {
+    if (window.PublicKeyCredential) {
+      setBiometricSupported(true);
+    }
+  }, []);
+
+  const handleSubmit = () => {
+    if (input === password) {
+      onUnlock();
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 1500);
+    }
+  };
+
+  const handleBiometric = async () => {
+    try {
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          timeout: 60000,
+          rpId: window.location.hostname,
+          allowCredentials: [],
+          userVerification: "required",
+        },
+      });
+      onUnlock();
+    } catch {
+      // biometric failed or cancelled — do nothing
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-background flex items-center justify-center z-[100]">
+      <div className="bg-card border border-border rounded-2xl p-8 w-80 shadow-2xl animate-fade-in flex flex-col items-center">
+        <div className="w-14 h-14 rounded-xl bg-amber flex items-center justify-center mb-4">
+          <span className="text-[hsl(var(--primary-foreground))] font-mono font-bold text-lg">DF</span>
+        </div>
+        <h1 className="text-lg font-semibold text-foreground mb-1">DF заметки</h1>
+        <p className="text-xs text-muted-foreground mb-6">Введите пароль для входа</p>
+
+        <input
+          type="password"
+          value={input}
+          onChange={(e) => { setInput(e.target.value); setError(false); }}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+          placeholder="Пароль..."
+          autoFocus
+          className={`w-full bg-muted border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber mb-3 ${
+            error ? "border-destructive" : "border-border"
+          }`}
+        />
+        {error && (
+          <p className="text-xs text-destructive mb-2">Неверный пароль</p>
+        )}
+        <button
+          onClick={handleSubmit}
+          className="w-full py-2.5 text-sm rounded-lg bg-amber text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity font-medium mb-2"
+        >
+          Войти
+        </button>
+        {biometricSupported && (
+          <button
+            onClick={handleBiometric}
+            className="w-full py-2.5 text-sm rounded-lg bg-muted text-foreground hover:bg-secondary transition-colors flex items-center justify-center gap-2"
+          >
+            <Icon name="Fingerprint" size={16} />
+            Биометрия
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // --- Editor content (shared between inline / fullscreen / float) ---
 function EditorContent({
   isEditing,
@@ -228,10 +577,15 @@ function EditorContent({
             {tags.map((tag) => {
               const active = editTags.includes(tag.id);
               return (
-                <button key={tag.id}
-                  onClick={() => setEditTags(active ? editTags.filter((t) => t !== tag.id) : [...editTags, tag.id])}
-                  className="text-xs px-2 py-1 rounded-full border transition-all"
-                  style={{ borderColor: active ? tag.color : tag.color + "40", backgroundColor: active ? tag.color + "25" : "transparent", color: active ? tag.color : tag.color + "90" }}
+                <button
+                  key={tag.id}
+                  onClick={() =>
+                    setEditTags(active ? editTags.filter((t) => t !== tag.id) : [...editTags, tag.id])
+                  }
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-all ${
+                    active ? "opacity-100" : "opacity-40 hover:opacity-70"
+                  }`}
+                  style={{ borderColor: tag.color + "60", color: tag.color, backgroundColor: active ? tag.color + "20" : "transparent" }}
                 >
                   #{tag.name}
                 </button>
@@ -286,12 +640,17 @@ export default function Index() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   // --- New states ---
-  // панель заметок скрыта
   const [notesListHidden, setNotesListHidden] = useState(false);
-  // режим редактора: "normal" | "fullscreen" | "float"
   const [editorMode, setEditorMode] = useState<"normal" | "fullscreen" | "float">("normal");
-  // поиск открыт через тулбар редактора
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Settings states
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light" | "golden">("dark");
+  const [accentColor, setAccentColor] = useState("#f59e0b");
+  const [password, setPassword] = useState("");
+  const [passwordEnabled, setPasswordEnabled] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(true);
 
   const [modal, setModal] = useState<
     | { type: "add-cat" }
@@ -303,7 +662,40 @@ export default function Index() {
     | null
   >(null);
 
-  // закрыть fullscreen/float по Escape
+  // Apply theme when it changes
+  useEffect(() => {
+    const vars = THEMES[theme];
+    if (!vars) return;
+    const root = document.documentElement;
+    Object.entries(vars).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+  }, [theme]);
+
+  // Apply accent color when it changes
+  useEffect(() => {
+    const accent = ACCENT_PALETTE.find((c) => c.hex === accentColor);
+    if (!accent) return;
+    const root = document.documentElement;
+    root.style.setProperty("--amber", accent.hsl);
+    root.style.setProperty("--primary", accent.hsl);
+    root.style.setProperty("--accent", accent.hsl);
+    root.style.setProperty("--ring", accent.hsl);
+    root.style.setProperty("--sidebar-primary", accent.hsl);
+    root.style.setProperty("--sidebar-ring", accent.hsl);
+  }, [accentColor]);
+
+  // Lock on password enable
+  useEffect(() => {
+    if (passwordEnabled && password) {
+      setIsUnlocked(false);
+    }
+    if (!passwordEnabled) {
+      setIsUnlocked(true);
+    }
+  }, [passwordEnabled, password]);
+
+  // Escape key for fullscreen/float
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && editorMode !== "normal") setEditorMode("normal");
@@ -387,10 +779,14 @@ export default function Index() {
   const getTag = (id: string) => tags.find((t) => t.id === id);
   const getCategoryName = (id: string) => categories.find((c) => c.id === id)?.name || id;
 
-  // Toolbar кнопки редактора (переиспользуем в обоих режимах)
+  // Lock screen
+  if (passwordEnabled && password && !isUnlocked) {
+    return <LockScreen password={password} onUnlock={() => setIsUnlocked(true)} />;
+  }
+
+  // Toolbar buttons for editor (reused in all modes)
   const editorToolbar = selectedNote && (
     <div className="flex items-center gap-1">
-      {/* Поиск — только в тулбаре (не в fullscreen) */}
       {editorMode === "normal" && (
         <button
           onClick={() => { setSearchOpen((v) => !v); setNotesListHidden(false); }}
@@ -410,7 +806,7 @@ export default function Index() {
       <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Экспорт">
         <Icon name="Download" size={15} />
       </button>
-      {/* Режимы окна */}
+      {/* Window modes */}
       <button
         onClick={() => setEditorMode(editorMode === "fullscreen" ? "normal" : "fullscreen")}
         className={`p-2 rounded-md transition-colors ${editorMode === "fullscreen" ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
@@ -423,8 +819,9 @@ export default function Index() {
         className={`p-2 rounded-md transition-colors ${editorMode === "float" ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
         title="Плавающее окно"
       >
-        <Icon name="AppWindow" size={15} />
+        <Icon name={editorMode === "float" ? "Minimize2" : "PictureInPicture2"} size={15} />
       </button>
+      <div className="w-px h-5 bg-border mx-1" />
       {isEditing ? (
         <>
           <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-sm rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">Отмена</button>
@@ -454,9 +851,9 @@ export default function Index() {
       <aside className={`flex flex-col border-r border-border bg-[hsl(var(--sidebar-background))] transition-all duration-300 ${sidebarCollapsed ? "w-14" : "w-56"}`}>
         <div className="flex items-center gap-2.5 px-4 py-5 border-b border-border">
           <div className="w-7 h-7 rounded-lg bg-amber flex items-center justify-center flex-shrink-0">
-            <span className="text-[hsl(var(--primary-foreground))] font-mono font-semibold text-sm">N</span>
+            <span className="text-[hsl(var(--primary-foreground))] font-mono font-semibold text-xs">DF</span>
           </div>
-          {!sidebarCollapsed && <span className="font-semibold text-foreground tracking-tight animate-fade-in">Notum</span>}
+          {!sidebarCollapsed && <span className="font-semibold text-foreground tracking-tight animate-fade-in">DF заметки</span>}
           <button onClick={() => setSidebarCollapsed((v) => !v)} className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
             <Icon name={sidebarCollapsed ? "PanelLeftOpen" : "PanelLeftClose"} size={15} />
           </button>
@@ -557,27 +954,45 @@ export default function Index() {
 
         <div className="px-3 py-3 border-t border-border">
           {!sidebarCollapsed ? (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Настройки"
+                >
+                  <Icon name="Settings" size={14} />
+                </button>
+                <button
+                  onClick={() => setNotesListHidden((v) => !v)}
+                  className={`p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  title={notesListHidden ? "Показать панель заметок" : "Скрыть панель заметок"}
+                >
+                  <Icon name={notesListHidden ? "PanelRightOpen" : "PanelRightClose"} size={14} />
+                </button>
+              </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[11px] text-muted-foreground">Офлайн-режим</span>
               </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1 items-center">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title="Настройки"
+              >
+                <Icon name="Settings" size={14} />
+              </button>
               <button
                 onClick={() => setNotesListHidden((v) => !v)}
-                className={`p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                className={`w-full flex justify-center p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
                 title={notesListHidden ? "Показать панель заметок" : "Скрыть панель заметок"}
               >
                 <Icon name={notesListHidden ? "PanelRightOpen" : "PanelRightClose"} size={14} />
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => setNotesListHidden((v) => !v)}
-              className={`w-full flex justify-center p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-              title={notesListHidden ? "Показать панель заметок" : "Скрыть панель заметок"}
-            >
-              <Icon name={notesListHidden ? "PanelRightOpen" : "PanelRightClose"} size={14} />
-            </button>
           )}
         </div>
       </aside>
@@ -741,6 +1156,26 @@ export default function Index() {
       {modal?.type === "add-tag" && <EditModal title="Новый тег" value="" showColor onSave={(name, color) => addTag(name, color)} onClose={() => setModal(null)} />}
       {modal?.type === "edit-tag" && <EditModal title="Изменить тег" value={modal.tag.name} color={modal.tag.color} showColor onSave={(name, color) => editTag_(modal.tag.id, name, color)} onClose={() => setModal(null)} />}
       {modal?.type === "delete-tag" && <DeleteModal label={`#${modal.tag.name}`} onConfirm={() => deleteTag(modal.tag.id)} onClose={() => setModal(null)} />}
+
+      {/* Settings panel */}
+      {showSettings && (
+        <SettingsPanel
+          theme={theme}
+          setTheme={setTheme}
+          accentColor={accentColor}
+          setAccentColor={setAccentColor}
+          password={password}
+          setPassword={setPassword}
+          passwordEnabled={passwordEnabled}
+          setPasswordEnabled={setPasswordEnabled}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Lock screen */}
+      {passwordEnabled && password && !isUnlocked && (
+        <LockScreen password={password} onUnlock={() => setIsUnlocked(true)} />
+      )}
     </div>
   );
 }
