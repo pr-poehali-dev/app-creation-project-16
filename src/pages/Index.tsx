@@ -555,14 +555,31 @@ export default function Index() {
           )}
         </nav>
 
-        {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-t border-border">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-muted-foreground">Офлайн-режим</span>
+        <div className="px-3 py-3 border-t border-border">
+          {!sidebarCollapsed ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-muted-foreground">Офлайн-режим</span>
+              </div>
+              <button
+                onClick={() => setNotesListHidden((v) => !v)}
+                className={`p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                title={notesListHidden ? "Показать панель заметок" : "Скрыть панель заметок"}
+              >
+                <Icon name={notesListHidden ? "PanelRightOpen" : "PanelRightClose"} size={14} />
+              </button>
             </div>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={() => setNotesListHidden((v) => !v)}
+              className={`w-full flex justify-center p-1.5 rounded-md transition-colors ${notesListHidden ? "text-amber bg-amber/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+              title={notesListHidden ? "Показать панель заметок" : "Скрыть панель заметок"}
+            >
+              <Icon name={notesListHidden ? "PanelRightOpen" : "PanelRightClose"} size={14} />
+            </button>
+          )}
+        </div>
       </aside>
 
       {/* Notes list panel */}
@@ -570,28 +587,18 @@ export default function Index() {
         <div className="w-72 flex-shrink-0 flex flex-col border-r border-border bg-card">
           {/* Search row */}
           <div className="px-3 py-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Icon name="Search" size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text" placeholder="Поиск по заметкам..." value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-muted rounded-md pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber transition-all"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <Icon name="X" size={12} />
-                  </button>
-                )}
-              </div>
-              {/* Кнопка закрыть панель */}
-              <button
-                onClick={() => setNotesListHidden(true)}
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
-                title="Скрыть панель заметок"
-              >
-                <Icon name="X" size={15} />
-              </button>
+            <div className="relative">
+              <Icon name="Search" size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text" placeholder="Поиск по заметкам..." value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-muted rounded-md pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber transition-all"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <Icon name="X" size={12} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -650,16 +657,6 @@ export default function Index() {
             <>
               <div className="flex items-center justify-between px-6 py-3.5 border-b border-border bg-card/50">
                 <div className="flex items-center gap-2">
-                  {/* Кнопка открыть панель если скрыта */}
-                  {notesListHidden && (
-                    <button
-                      onClick={() => setNotesListHidden(false)}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors mr-1"
-                      title="Показать панель заметок"
-                    >
-                      <Icon name="PanelLeftOpen" size={15} />
-                    </button>
-                  )}
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">{getCategoryName(selectedNote.categoryId)}</span>
                   {selectedNote.tags.map((tid) => {
                     const tag = getTag(tid);
@@ -675,11 +672,6 @@ export default function Index() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
-              {notesListHidden && (
-                <button onClick={() => setNotesListHidden(false)} className="absolute top-4 left-4 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                  <Icon name="PanelLeftOpen" size={15} />
-                </button>
-              )}
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <Icon name="FileText" size={28} className="text-muted-foreground" />
               </div>
